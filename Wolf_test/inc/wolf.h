@@ -63,6 +63,7 @@ typedef struct	s_sprites
 	void		*image[10];
 	int			bppimage[10];
 	int			t_s[10];
+	int			sprite_num;
 }				t_sprites;
 
 typedef struct	s_img
