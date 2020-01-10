@@ -1,6 +1,9 @@
 {
 	"files.associations": {
 		"stdio.h": "c",
-		"ios": "c"
+		"ios": "c",
+		"cmath": "c",
+		"complex": "c",
+		"algorithm": "c"
 	}
 }

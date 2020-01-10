@@ -38,6 +38,45 @@ int		get_color_tex(int x, int y, char *addimg, int t_s)
 	return (color);
 }
 
+
+int		sprite_pos_a(t_mlx *m)
+{
+	int i;
+	double sp_dist[m->sprite->sprite_num];
+	double pos_x = m->pos_x + m->dir_x * (0.25);
+	double pos_y = m->pos_y + m->dir_y * (0.25);
+
+	i = 0;
+	
+	while (i < m->sprite->sprite_num)
+	{
+		sp_dist[i] =(pos_x - m->sprite->x[i]) * (pos_x - m->sprite->x[i]) + (pos_y - m->sprite->y[i]) * (pos_y - m->sprite->y[i]);
+		if (sp_dist[i] <= 0.075)
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+int		sprite_pos_b(t_mlx *m)
+{
+	int i;
+	double sp_dist[m->sprite->sprite_num];
+	double pos_x = m->pos_x - m->dir_x * (0.25);
+	double pos_y = m->pos_y - m->dir_y * (0.25);
+
+	i = 0;
+	
+	while (i < m->sprite->sprite_num)
+	{
+		sp_dist[i] =(pos_x - m->sprite->x[i]) * (pos_x - m->sprite->x[i]) + (pos_y - m->sprite->y[i]) * (pos_y - m->sprite->y[i]);
+		if (sp_dist[i] <= 0.075)
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
 void	wasd(int key, t_mlx *m)
 {
 	double	speed = 0.05;
@@ -45,16 +84,16 @@ void	wasd(int key, t_mlx *m)
 
 	if (key == 13)
 	{
-		if (m->map[(int)(m->pos_x + m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0)
+		if (m->map[(int)(m->pos_x + m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0 && sprite_pos_a(m) == 1)
 			m->pos_x += m->dir_x * speed_move;
-		if (m->map[(int)m->pos_x][(int)(m->pos_y + m->dir_y * (speed_move * 2))] <= 0)
+		if (m->map[(int)m->pos_x][(int)(m->pos_y + m->dir_y * (speed_move * 2))] <= 0 && sprite_pos_a(m) == 1)
 			m->pos_y += m->dir_y * speed_move;
 	}
 	else if (key == 1)
 	{
-		if (m->map[(int)(m->pos_x - m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0)
+		if (m->map[(int)(m->pos_x - m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0 && sprite_pos_b(m) == 1)
 			m->pos_x -= m->dir_x * speed_move;
-		if (m->map[(int)m->pos_x][(int)(m->pos_y - m->dir_y * (speed_move * 2))] <= 0)
+		if (m->map[(int)m->pos_x][(int)(m->pos_y - m->dir_y * (speed_move * 2))] <= 0 && sprite_pos_b(m) == 1)
 			m->pos_y -= m->dir_y * speed_move;
 	}
 	else if (key == 2)
@@ -164,7 +203,8 @@ void	draw(t_mlx *m)
 		double	ray_dir_x = m->dir_x + m->plane_x * camera_x; // направление луча по x
 		double	ray_dir_y = m->dir_y + m->plane_y * camera_x; // направление луча по y
 
-		
+		printf("x = %f\n", ray_dir_x);
+		printf("y = %f\n", ray_dir_y);
 
 		int	map_x = (int)m->pos_x; // в каком квадрате карты мы находимся
 		int	map_y = (int)m->pos_y; // в каком квадрате карты мы находимся
@@ -175,6 +215,8 @@ void	draw(t_mlx *m)
 		double delta_dist_x = sqrt(1 + (ray_dir_y * ray_dir_y) / (ray_dir_x * ray_dir_x)); // длина луча от одной стороны x до следующей
 		double delta_dist_y = sqrt(1 + (ray_dir_x * ray_dir_x) / (ray_dir_y * ray_dir_y)); // длина луча от одной стороны y до следующей
 		double perp_wall_dist; // расчет длины луча до стены 
+
+
 
 		int step_x; // движемся по x-направлению (+1)(-1)
 		int step_y; // движемся по y-направлению (+1)(-1)
@@ -203,9 +245,10 @@ void	draw(t_mlx *m)
 			step_y = 1;
 			side_dist_y = (map_y + 1.0 - m->pos_y) * delta_dist_y;
 		}
-
+		
 		while (hit == 0) // алгоритм DDA
 		{
+			
 			if (side_dist_x < side_dist_y) // переходим к след. квадрату по x или по y
 			{
 				side_dist_x += delta_dist_x;
@@ -218,16 +261,25 @@ void	draw(t_mlx *m)
 				map_y += step_y;
 				side = 1;
 			}
-			if (m->map[map_x][map_y] > 0) // проверяем попал ли луч в стену 
+			if (m->map[map_x][map_y] > 0 && m->map[map_x][map_y] < 5) // проверяем попал ли луч в стену 
 			{
 				hit = 1;
 			}
 		}
+		
 
+		/*if ( x == 960 / 2)
+		{
+			printf("map_x_ray = %i\n", map_x);
+		}*/
 		// вычисляем расстояние до стены 
 		if (side == 0) // если стена x
 		{
 			perp_wall_dist = (map_x - m->pos_x + (1 - step_x) / 2) / ray_dir_x;
+			/*if ( x == 960 / 2)
+			{
+			printf("perp_x = %f\n", (map_x - m->pos_x + (1 - step_x) / 2));
+			}*/
 		}
 		else
 		{
@@ -242,7 +294,6 @@ void	draw(t_mlx *m)
 		int	draw_end = (wall_height / 2 + h / 2) + m->up;
 		if (draw_end >= h)
 			draw_end = h - 1;
-
 
 		//if (draw_end_tex >= h)
 		//draw_end_tex = h - 1;
@@ -318,7 +369,7 @@ void	draw(t_mlx *m)
 		}
 		
 
-
+		
 
 		
 
@@ -468,6 +519,9 @@ void	draw(t_mlx *m)
 		}
 
 
+		
+
+
 
 		m->wall_dist[x] = perp_wall_dist; // для спрайтов
 		x++;
@@ -487,7 +541,6 @@ void	draw(t_mlx *m)
 		sort[i] = i;
 		i++;
 	}
-	
 	i = 1;
 	while (i < m->sprite->sprite_num)
 	{
@@ -512,7 +565,6 @@ void	draw(t_mlx *m)
 	printf("dist 3 = %f\n", sprite_dist[3]);
 	printf("\n\n\n\n\n");
 */
-
 
 	i = 0;
 	while (i < m->sprite->sprite_num)
@@ -571,6 +623,222 @@ void	draw(t_mlx *m)
 		}
 		i++;
 	}
+
+
+	x = 0;
+	while (x < WIN_W)
+	{
+	/////////////////////////////////////////////
+
+		
+		double	camera_x = 2 * x / (double)WIN_W - 1; // координата x на плоскости камеры
+		double	ray_dir_x = m->dir_x + m->plane_x * camera_x; // направление луча по x
+		double	ray_dir_y = m->dir_y + m->plane_y * camera_x; // направление луча по y
+
+		//printf("x = %f\n", ray_dir_x);
+		//printf("y = %f\n", ray_dir_y);
+
+		int	map_x = (int)m->pos_x; // в каком квадрате карты мы находимся
+		int	map_y = (int)m->pos_y; // в каком квадрате карты мы находимся
+		
+		if (x == 960 / 2)
+		{
+			printf("player_x = %f\n", m->pos_x);
+			printf("player_y = %f\n", m->pos_y);
+			//printf("map_x = %i\n", map_x);
+			//printf("map_y = %i\n", map_y);
+		}
+
+		double side_dist_x; // изначальная длина луча от тек. позиции до следующей
+		double side_dist_y; // изначальная длина луча от тек. позиции до следующей
+
+		double delta_dist_x = sqrt((1 * 1 ) + (ray_dir_y / ray_dir_x) * (ray_dir_y / ray_dir_x)); // длина луча от одной стороны x до следующей
+		double delta_dist_y = sqrt((1 * 1 ) + (ray_dir_x / ray_dir_y) * (ray_dir_x / ray_dir_y)); // длина луча от одной стороны y до следующей
+		double perp_wall_dist; // расчет длины луча до стены 
+
+
+
+		double step_x; // движемся по x-направлению (+1)(-1)
+		double step_y; // движемся по y-направлению (+1)(-1)
+
+
+		int hit = 0; // было ли попадание в стену?
+		int side; // по какой стороне стены было попадание? по x=0 , по y=1
+
+		// шагаем по x или по y
+		
+		if (ray_dir_x < 0)
+		{
+			step_x = -1;
+			if (fabs((int)m->pos_x - m->pos_x) <= 0.5)
+				side_dist_x = (m->pos_x - (map_x - 0.5)) * delta_dist_x;
+			else
+				side_dist_x = (m->pos_x - (map_x + 0.5)) * delta_dist_x;
+			//side_dist_x = (m->pos_x - map_x) * delta_dist_x ;
+		}
+		else
+		{
+			step_x = 1;
+			if (fabs((int)m->pos_x - m->pos_x) <= 0.5)
+				side_dist_x = (map_x + 0.5 - m->pos_x) * delta_dist_x;
+			else
+				side_dist_x = (map_x + 1.5 - m->pos_x) * delta_dist_x;
+			//side_dist_x = (map_x + 1 - m->pos_x) * delta_dist_x ;
+		}
+		if (ray_dir_y < 0)
+		{
+			step_y = -1;
+			if (fabs((int)m->pos_y - m->pos_y) <= 0.5)
+				side_dist_y = (m->pos_y - map_y) * delta_dist_y;
+			else
+				side_dist_y = (m->pos_y - map_y) * delta_dist_y;
+			//side_dist_y = (m->pos_y - map_y) * delta_dist_y ;
+			
+		}
+		else
+		{
+			step_y = 1;
+			if (fabs((int)m->pos_y - m->pos_y) <= 0.5)
+				side_dist_y = (map_y + 1 - m->pos_y) * delta_dist_y;
+			else
+				side_dist_y = (map_y + 1 - m->pos_y) * delta_dist_y;
+			//side_dist_y = (map_y + 1 - m->pos_y) * delta_dist_y;
+			
+		}
+		
+		while (hit == 0) // алгоритм DDA
+		{
+			//printf("side_x %f\n", side_dist_x);
+			//printf("side_y %f\n", side_dist_y);
+			if (side_dist_x < side_dist_y) // переходим к след. квадрату по x или по y
+			{
+				side_dist_x += delta_dist_x;
+				map_x += step_x;
+				side = 0;
+			}
+			else
+			{
+				side_dist_y += delta_dist_y;
+				map_y += step_y;
+				side = 1;
+			}
+				
+			if (m->map[map_x][map_y] > 0) // проверяем попал ли луч в стену 
+			{
+				hit = 1;
+			}	
+		}
+		
+		
+
+
+		
+		if (m->map[map_x][map_y] == 6)  //// && side == 0 && (ray_dir_x > 0 || ray_dir_x < 0)
+		{	
+			/*double a;
+			double b;
+			//printf("x = %f\n", side_dist_x);
+			//printf("y = %f\n", side_dist_y);
+			if (step_x < 0)
+				a = -0.5;
+			else
+				a = 0.5;
+			if (step_y < 0)
+				b = -0.5;
+			else
+				b = 0.5;
+								*/
+			// вычисляем расстояние до стены 
+			if (side == 0) // если стена x
+			{
+				//perp_wall_dist = (map_x - m->pos_x + (1 - step_x) / 2) / ray_dir_x;
+				perp_wall_dist = (map_x - m->pos_x + 0.5) / ray_dir_x;
+				/*if (ray_dir_x < 0)
+				{
+					perp_wall_dist = (map_x - m->pos_x + 0.5) / ray_dir_x;
+				}*/
+				if (x == 960 / 2)
+				{
+					printf ("ray_map_x %i\n", map_x);
+					printf ("ray_map_y %i\n", map_y);
+					printf("p %f\n", (map_x - m->pos_x + 0.5));
+					printf("perp %f\n", perp_wall_dist);
+				}
+			//}
+			/*else
+			{
+				//perp_wall_dist = (map_y - m->pos_y + (1 - step_y) / 2) / ray_dir_y;
+				//perp_wall_dist = (map_y - m->pos_y + 0.5) / ray_dir_y;
+			}*/
+
+			
+
+			int	h = WIN_H;
+			int	wall_height = (int) (h / perp_wall_dist); //вычисляем нижний и верхний пиксель стены
+			int	draw_start = (-wall_height / 2 + h / 2) + m->up;
+			if (draw_start < 0)
+				draw_start = 0;
+			int	draw_end = (wall_height / 2 + h / 2) + m->up;
+			if (draw_end >= h)
+				draw_end = h - 1;
+
+	
+
+			double wall_x; //где именно было попадание в стену
+			if (side == 0)
+				wall_x = m->pos_y + perp_wall_dist * ray_dir_y;
+			else
+			{
+				wall_x = m->pos_x + perp_wall_dist * ray_dir_x;
+			}
+			wall_x -= floor((wall_x)); // координата х на текстуре
+			int tex_x = (int)(wall_x * (double)TEX_W);
+			if (side == 0 && ray_dir_x > 0)
+				tex_x = TEX_W - tex_x - 1;
+			if (side == 1 && ray_dir_y < 0)
+				tex_x = TEX_W - tex_x - 1;
+		
+			int	y = draw_start;
+			int color;
+			while (y < draw_end)
+			{
+				int d = (y - m->up) * 256 - h * 128 + wall_height * 128;
+				int tex_y = ((d * TEX_H) / wall_height) / 256;
+				if (tex_x <= 0)
+					tex_x = 0;
+				if (tex_y <= 0)
+					tex_y = 0;
+				if (tex_x >= TEX_W)
+					tex_x = TEX_W;
+				if (tex_y >= TEX_H)
+					tex_y = TEX_H;
+			
+				if (side == 0 && ray_dir_x > 0)
+				{
+					color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
+					//draw_tex(x, y, color, m);
+				}
+				if (side == 0 && ray_dir_x < 0)
+				{
+					color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
+					//draw_tex(x, y, color, m);
+				}
+				if (side == 1 && ray_dir_y > 0)
+					color = get_color_tex(tex_x, tex_y, m->i->addimg[5], m->i->t_s[5]);
+				if (side == 1 && ray_dir_y < 0)
+					color = get_color_tex(tex_x, tex_y, m->i->addimg[6], m->i->t_s[6]);
+				draw_tex(x, y, color, m);
+				y++;
+			}
+			}
+		}
+		x++;
+	}
+		////////////////////////////////////////////
+		
+
+
+
 	mlx_put_image_to_window(m->mlx, m->window, m->i->img, 0, 0);
 }
 
@@ -582,14 +850,14 @@ int		main(void)
 	char		world_map[MAP_W][MAP_H] =
 	{
 		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+		{1,6,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+  		{1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,3,0,3,0,3,0,0,0,1},
   		{1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,3,0,0,0,3,0,0,0,1},
   		{1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  		{1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,3,0,3,0,3,0,0,0,1},
+  		{1,0,0,0,0,0,1,1,0,1,1,0,6,0,0,3,6,3,0,3,0,0,0,1},
   		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -599,7 +867,7 @@ int		main(void)
   		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,4,-1,4,-1,-1,-1,-1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  		{1,4,-1,-1,-1,-1,5,-1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+  		{1,4,-1,-1,-1,-1,4,-1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,4,-1,4,-1,-1,-1,-1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,4,-1,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
   		{1,4,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -609,8 +877,8 @@ int		main(void)
 
 	if (!(m.map = (char **)malloc(24 * sizeof(char*))))
 		exit(0);
-	double	pos_x = 12;  // позиция игрока
-	double	pos_y = 12;
+	double	pos_x = 4;  // позиция игрока
+	double	pos_y = 4;
 	double	dir_x = -1;  //начальный вектор направления игрока
 	double	dir_y = 0;
 	double	plane_x = 0; // плоскость камеры 
@@ -657,26 +925,32 @@ int		main(void)
 	sprite.t_s[0] = 128;
 	sprite.image[0] = mlx_xpm_file_to_image(m.mlx, "./sprite.xpm", &sprite.t_s[0], &sprite.t_s[0]);
 	sprite.addimg[0] = mlx_get_data_addr(sprite.image[0], &sprite.bppimage[0], &sprite.sl[0], &sprite.endl[0]);
-	sprite.x[0] = 9.5;
-	sprite.y[0] = 9;
+	sprite.x[0] = 9.2;
+	sprite.y[0] = 10;
 
 	sprite.t_s[1] = 128;
 	sprite.image[1] = mlx_xpm_file_to_image(m.mlx, "./sprite.xpm", &sprite.t_s[1], &sprite.t_s[1]);
 	sprite.addimg[1] = mlx_get_data_addr(sprite.image[1], &sprite.bppimage[1], &sprite.sl[1], &sprite.endl[1]);
-	sprite.x[1] = 9.5;
+	sprite.x[1] = 12.5;
 	sprite.y[1] = 8;
 
 	sprite.t_s[2] = 128;
 	sprite.image[2] = mlx_xpm_file_to_image(m.mlx, "./sprite.xpm", &sprite.t_s[2], &sprite.t_s[2]);
 	sprite.addimg[2] = mlx_get_data_addr(sprite.image[2], &sprite.bppimage[2], &sprite.sl[2], &sprite.endl[2]);
-	sprite.x[2] = 9.0;
-	sprite.y[2] = 8.5;
+	sprite.x[2] = 12.0;
+	sprite.y[2] = 7;
 
 	sprite.t_s[3] = 128;
 	sprite.image[3] = mlx_xpm_file_to_image(m.mlx, "./sprite.xpm", &sprite.t_s[3], &sprite.t_s[3]);
 	sprite.addimg[3] = mlx_get_data_addr(sprite.image[3], &sprite.bppimage[3], &sprite.sl[3], &sprite.endl[3]);
-	sprite.x[3] = 10.0;
-	sprite.y[3] = 8.5;
+	sprite.x[3] = 12.0;
+	sprite.y[3] = 10;
+
+	/*sprite.t_s[4] = 128;
+	sprite.image[4] = mlx_xpm_file_to_image(m.mlx, "./kam128.xpm", &sprite.t_s[4], &sprite.t_s[4]);
+	sprite.addimg[4] = mlx_get_data_addr(sprite.image[4], &sprite.bppimage[4], &sprite.sl[4], &sprite.endl[4]);
+	sprite.x[4] = 8;
+	sprite.y[4] = 16.5;*/
 
 	sprite.sprite_num = 4;
 	m.sprite = &sprite;
