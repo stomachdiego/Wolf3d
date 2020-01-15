@@ -520,102 +520,7 @@ void	draw(t_mlx *m)
 		x++;
 	}
 	
-	// sprites
-	int i;
-	int	temp;
-	double temp_d;
-	int sort[m->sprite->sprite_num];
-	double sprite_dist[m->sprite->sprite_num];
-	//  сортировка спрайтов 
-	i = 0;
-	while (i < m->sprite->sprite_num)
-	{
-		sprite_dist[i] =(m->pos_x - m->sprite->x[i]) * (m->pos_x - m->sprite->x[i]) + (m->pos_y - m->sprite->y[i]) * (m->pos_y - m->sprite->y[i]);
-		sort[i] = i;
-		i++;
-	}
-	i = 1;
-	while (i < m->sprite->sprite_num)
-	{
-		if (sprite_dist[i - 1] < sprite_dist[i])
-		{
-				temp_d = sprite_dist[i];
-				sprite_dist[i] = sprite_dist[i - 1];
-				sprite_dist[i - 1] = temp_d;
 
-				temp = sort[i];
-				sort[i] = sort[i - 1];
-				sort[i - 1] = temp;
-				i = 0;
-		}
-		i++;
-	}
-	/*printf("0 = %i\n", sort[0]);
-	printf("1 = %i\n", sort[1]);
-	printf("dist 0 = %f\n", sprite_dist[0]);
-	printf("dist 1 = %f\n", sprite_dist[1]);
-	printf("dist 2 = %f\n", sprite_dist[2]);
-	printf("dist 3 = %f\n", sprite_dist[3]);
-	printf("\n\n\n\n\n");
-*/
-
-	i = 0;
-	while (i < m->sprite->sprite_num)
-	{
-		int	x_div = 1; // изменить  ширину спрайта
-		int y_div = 1; // изменить  высоту спрайта 
-		double y_move = 128.0; // up |  down sprite 
-		int	h = WIN_H;
-		double sprite_x = m->sprite->x[sort[i]] - m->pos_x; // положение спрайта относительно камеры
-		double sprite_y = m->sprite->y[sort[i]] - m->pos_y; // положение спрайта относительно камеры
-
-		double inv_det = 1.0 / (m->plane_x * m->dir_y - m->dir_x * m->plane_y);
-		double transform_x = inv_det * (m->dir_y * sprite_x - m->dir_x * sprite_y);
-		double transform_y = inv_det * (-m->plane_y * sprite_x + m->plane_x * sprite_y);
-
-		int y_move_screen = (int)(y_move / transform_y) + m->up;
-
-
-		int	sprite_screen_x = (int) ((WIN_W / 2) * (1 + transform_x / transform_y)); // высота спрайта на экране 
-
-		int	sprite_height = abs((int)(h / transform_y)) / y_div;
-		// вычисляем нижный и верхний пиксель
-		int draw_start_y = -sprite_height / 2 + h / 2 + y_move_screen;
-		if (draw_start_y < 0)
-			draw_start_y = 0;
-		int draw_end_y = sprite_height / 2 + h / 2 + y_move_screen;
-		if (draw_end_y >= h)
-			draw_end_y = h - 1;
-		// вычисляем ширину спрайта 
-		int sprite_weight = abs((int)(h / transform_y)) / x_div;
-		int draw_start_x = -sprite_weight / 2 + sprite_screen_x;
-		if (draw_start_x < 0)
-			draw_start_x = 0;
-		int draw_end_x = sprite_weight / 2 + sprite_screen_x;
-		if (draw_end_x >= WIN_W)
-			draw_end_x = WIN_W - 1;
-			
-		int s = draw_start_x;
-		while (s < draw_end_x)
-		{
-			int tex_x_s = (int)(256 * (s - (-sprite_weight / 2 + sprite_screen_x)) * m->sprite->t_s[sort[i]] / sprite_weight) / 256;
-			if (transform_y > 0 &&  s > 0 && s < WIN_W && transform_y < m->wall_dist[s])
-			{
-				int y = draw_start_y;
-				while (y < draw_end_y)
-				{
-					int d = (y - y_move_screen) * 256 - h * 128 + sprite_height * 128;
-					int tex_y = ((d * m->sprite->t_s[sort[i]]) / sprite_height) / 256;
-					int color = get_color_tex(tex_x_s, tex_y, m->sprite->addimg[sort[i]], m->sprite->t_s[sort[i]]);
-					if (color != 0x000000)
-						draw_tex(s, y, color, m);
-					y++;
-				}
-			}
-		s++;
-		}
-		i++;
-	}
 
 
 	x = 0;
@@ -681,7 +586,6 @@ void	draw(t_mlx *m)
 				step_y = 1;
 				map_y += fabs(sqrt((side_dist_x * side_dist_x) - (dist_x * dist_x)));
 			}
-			
 			map_x -= fabs(dist_x);
 		}
 		else
@@ -718,10 +622,10 @@ void	draw(t_mlx *m)
 		double map_step_y = sqrt((delta_dist_x * delta_dist_x) - (1 * 1));
 		
 		if (m->map[(int)map_x][(int)map_y] > 0) // проверяем попал ли луч в стену 
-			{
-				side = 0;
-				hit = 1;
-			}
+		{
+			side = 0;
+			hit = 1;
+		}
 		while (hit == 0) // алгоритм DDA
 		{
 			map_x += step_x;
@@ -754,63 +658,159 @@ void	draw(t_mlx *m)
 				
 				perp_wall_dist = ((int)map_x - m->pos_x + 0.5) / ray_dir_x;
 			
-		
-
-				int	h = WIN_H;
-				int	wall_height = (int) (h / perp_wall_dist); //вычисляем нижний и верхний пиксель стены
-				int	draw_start = (-wall_height / 2 + h / 2) + m->up;
-				if (draw_start < 0)
-					draw_start = 0;
-				int	draw_end = (wall_height / 2 + h / 2) + m->up;
-				if (draw_end >= h)
-					draw_end = h - 1;
-				double wall_x; //где именно было попадание в стену
-				if (side == 0)
-					wall_x = m->pos_y + perp_wall_dist * ray_dir_y;
-				else
-					wall_x = m->pos_x + perp_wall_dist * ray_dir_x;
-				wall_x -= floor((wall_x)); // координата х на текстуре
-				int tex_x = (int)(wall_x * (double)TEX_W);
-				if (side == 0 && ray_dir_x > 0)
-					tex_x = TEX_W - tex_x - 1;
-				if (side == 1 && ray_dir_y < 0)
-					tex_x = TEX_W - tex_x - 1;
-		
-				int	y = draw_start;
-				int color;
-				while (y < draw_end)
+				if (m->wall_dist[x] > perp_wall_dist)
 				{
-					int d = (y - m->up) * 256 - h * 128 + wall_height * 128;
-					int tex_y = ((d * TEX_H) / wall_height) / 256;
-					if (tex_x <= 0)
-						tex_x = 0;
-					if (tex_y <= 0)
-						tex_y = 0;
-					if (tex_x >= TEX_W)
-						tex_x = TEX_W;
-					if (tex_y >= TEX_H)
-						tex_y = TEX_H;
-			
+					int	h = WIN_H;
+					int	wall_height = (int) (h / perp_wall_dist); //вычисляем нижний и верхний пиксель стены
+					int	draw_start = (-wall_height / 2 + h / 2) + m->up;
+					if (draw_start < 0)
+						draw_start = 0;
+					int	draw_end = (wall_height / 2 + h / 2) + m->up;
+					if (draw_end >= h)
+						draw_end = h - 1;
+					double wall_x; //где именно было попадание в стену
+					if (side == 0)
+						wall_x = m->pos_y + perp_wall_dist * ray_dir_y;
+					else
+						wall_x = m->pos_x + perp_wall_dist * ray_dir_x;
+					wall_x -= floor((wall_x)); // координата х на текстуре
+					int tex_x = (int)(wall_x * (double)TEX_W);
 					if (side == 0 && ray_dir_x > 0)
+						tex_x = TEX_W - tex_x - 1;
+					if (side == 1 && ray_dir_y < 0)
+						tex_x = TEX_W - tex_x - 1;
+		
+					int	y = draw_start;
+					int color;
+					while (y < draw_end)
 					{
-						color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
-						color = 0xff00ff;
-						//draw_tex(x, y, color, m);
+						int d = (y - m->up) * 256 - h * 128 + wall_height * 128;
+						int tex_y = ((d * TEX_H) / wall_height) / 256;
+						if (tex_x <= 0)
+							tex_x = 0;
+						if (tex_y <= 0)
+							tex_y = 0;
+						if (tex_x >= TEX_W)
+							tex_x = TEX_W;
+						if (tex_y >= TEX_H)
+							tex_y = TEX_H;
+			
+						if (side == 0 && ray_dir_x > 0)
+						{
+							color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
+							color = 0xff00ff;
+							//draw_tex(x, y, color, m);
+						}
+						if (side == 0 && ray_dir_x < 0)
+						{
+							color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
+							color = 0xffffff;
+							//draw_tex(x, y, color, m);
+						}
+
+						draw_tex(x, y, color, m);
+						y++;
 					}
-					if (side == 0 && ray_dir_x < 0)
-					{
-						color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
-						color = 0xffffff;
-						//draw_tex(x, y, color, m);
-					}
-					
-					draw_tex(x, y, color, m);
-					y++;
+					m->wall_dist[x] = perp_wall_dist;
 				}
 			}
 		}
 		x++;
 	}
+
+		// sprites
+	int i;
+	int	temp;
+	double temp_d;
+	int sort[m->sprite->sprite_num];
+	double sprite_dist[m->sprite->sprite_num];
+	//  сортировка спрайтов 
+	i = 0;
+	while (i < m->sprite->sprite_num)
+	{
+		sprite_dist[i] =(m->pos_x - m->sprite->x[i]) * (m->pos_x - m->sprite->x[i]) + (m->pos_y - m->sprite->y[i]) * (m->pos_y - m->sprite->y[i]);
+		sort[i] = i;
+		i++;
+	}
+	i = 1;
+	while (i < m->sprite->sprite_num)
+	{
+		if (sprite_dist[i - 1] < sprite_dist[i])
+		{
+				temp_d = sprite_dist[i];
+				sprite_dist[i] = sprite_dist[i - 1];
+				sprite_dist[i - 1] = temp_d;
+
+				temp = sort[i];
+				sort[i] = sort[i - 1];
+				sort[i - 1] = temp;
+				i = 0;
+		}
+		i++;
+	}
+	
+
+	i = 0;
+	while (i < m->sprite->sprite_num)
+	{
+		int	x_div = 1; // изменить  ширину спрайта
+		int y_div = 1; // изменить  высоту спрайта 
+		double y_move = 128.0; // up |  down sprite 
+		int	h = WIN_H;
+		double sprite_x = m->sprite->x[sort[i]] - m->pos_x; // положение спрайта относительно камеры
+		double sprite_y = m->sprite->y[sort[i]] - m->pos_y; // положение спрайта относительно камеры
+
+		double inv_det = 1.0 / (m->plane_x * m->dir_y - m->dir_x * m->plane_y);
+		double transform_x = inv_det * (m->dir_y * sprite_x - m->dir_x * sprite_y);
+		double transform_y = inv_det * (-m->plane_y * sprite_x + m->plane_x * sprite_y);
+
+		int y_move_screen = (int)(y_move / transform_y) + m->up;
+
+
+		int	sprite_screen_x = (int) ((WIN_W / 2) * (1 + transform_x / transform_y)); // высота спрайта на экране 
+
+		int	sprite_height = abs((int)(h / transform_y)) / y_div;
+		// вычисляем нижный и верхний пиксель
+		int draw_start_y = -sprite_height / 2 + h / 2 + y_move_screen;
+		if (draw_start_y < 0)
+			draw_start_y = 0;
+		int draw_end_y = sprite_height / 2 + h / 2 + y_move_screen;
+		if (draw_end_y >= h)
+			draw_end_y = h - 1;
+		// вычисляем ширину спрайта 
+		int sprite_weight = abs((int)(h / transform_y)) / x_div;
+		int draw_start_x = -sprite_weight / 2 + sprite_screen_x;
+		if (draw_start_x < 0)
+			draw_start_x = 0;
+		int draw_end_x = sprite_weight / 2 + sprite_screen_x;
+		if (draw_end_x >= WIN_W)
+			draw_end_x = WIN_W - 1;
+			
+		int s = draw_start_x;
+		while (s < draw_end_x)
+		{
+			int tex_x_s = (int)(256 * (s - (-sprite_weight / 2 + sprite_screen_x)) * m->sprite->t_s[sort[i]] / sprite_weight) / 256;
+			if (transform_y > 0 &&  s > 0 && s < WIN_W && transform_y < m->wall_dist[s])
+			{
+				int y = draw_start_y;
+				while (y < draw_end_y)
+				{
+					int d = (y - y_move_screen) * 256 - h * 128 + sprite_height * 128;
+					int tex_y = ((d * m->sprite->t_s[sort[i]]) / sprite_height) / 256;
+					int color = get_color_tex(tex_x_s, tex_y, m->sprite->addimg[sort[i]], m->sprite->t_s[sort[i]]);
+					if (color != 0x000000)
+						draw_tex(s, y, color, m);
+					y++;
+				}
+			}
+		s++;
+		}
+		i++;
+	}
+
+
+
+
 
 
 	mlx_put_image_to_window(m->mlx, m->window, m->i->img, 0, 0);
