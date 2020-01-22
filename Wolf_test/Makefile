@@ -16,11 +16,13 @@ OBJ = $(SRC:.c=.o)
 
 FLAGS = -O3
 
-MLX_FLAGS = -I minilibx -lmlx -framework OpenGL -framework AppKit
+SDL_FLAGS = -I include -I SDL_lib/SDL2.framework/Headers -I SDL_lib/SDL2_image.framework/Headers -I SDL_lib/SDL2_ttf.framework/Headers
+
+SDL2 = -framework SDL2 -framework SDL2_image -framework SDL2_ttf  -F ./SDL_lib/
+
+SDL2_LOAD = -rpath @loader_path/SDL_lib/
 
 INC = ./inc
-
-MLX = ./mlx/libmlx.a
 
 NAME = wolf3d
 
@@ -29,19 +31,15 @@ HEADERS = ./inc/wolf.h
 all: $(NAME)
 
 $(NAME): $(OBJ) $(MLX) $(HEADERS)
-	gcc $(FLAGS) $(MLX_FLAGS) -o $(NAME) $(OBJ) $(MLX)
+	gcc -o $(NAME) $(OBJ) $(FLAGS) $(SDL2_LOAD) $(SDL2)
 
 .c.o: $(HEADERS)
-	gcc -I$(INC) $(FLAGS) -c $< -o $@
-
-$(MLX):
-	make -C ./mlx/
+	gcc -I$(INC) $(FLAGS) $(SDL_FLAGS) -c $< -o $@
 
 clean:
 	/bin/rm -f $(OBJ)
 
 fclean: clean
-	make clean -C ./mlx/
 	/bin/rm -f $(NAME)
 
 re: fclean all

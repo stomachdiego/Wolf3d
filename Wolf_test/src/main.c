@@ -27,15 +27,12 @@ void	draw_tex(int x, int y, int color, t_mlx *m)
 	*(int *)(m->i->ptr + x * m->i->bpp) = color;
 }
 
-int		get_color_tex(int x, int y, char *addimg, int t_s)
+int		get_color_tex(int x, int y, t_mlx *m)
 {
-	int color;
-	int temp;
-
-	temp = (x + y * t_s) * 4;
-	color = *(int*)(addimg + temp);
-	
-	return (color);
+	int bpp = m->texture[m->tex_numb]->format->BytesPerPixel;
+	Uint32 pixel = *(Uint32 *)(((Uint8*)m->texture[m->tex_numb]->pixels) + bpp * x + m->texture[m->tex_numb]->pitch * y);
+	SDL_GetRGB(pixel, m->texture[m->tex_numb]->format, &m->r, &m->g, &m->b);
+	return (0);
 }
 
 
@@ -77,26 +74,26 @@ int		sprite_pos_b(t_mlx *m)
 	return (1);
 }
 
-void	wasd(int key, t_mlx *m)
+void	wasd(t_mlx *m)
 {
 	double	speed = 0.05;
 	double	speed_move = 0.25;
 
-	if (key == 13)
+	if (m->e.key.keysym.sym == SDLK_w)
 	{
 		if (m->map[(int)(m->pos_x + m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0 && sprite_pos_a(m) == 1)
 			m->pos_x += m->dir_x * speed_move;
 		if (m->map[(int)m->pos_x][(int)(m->pos_y + m->dir_y * (speed_move * 2))] <= 0 && sprite_pos_a(m) == 1)
 			m->pos_y += m->dir_y * speed_move;
 	}
-	else if (key == 1)
+	else if (m->e.key.keysym.sym == SDLK_s)
 	{
 		if (m->map[(int)(m->pos_x - m->dir_x * (speed_move * 2))][(int)m->pos_y] <= 0 && sprite_pos_b(m) == 1)
 			m->pos_x -= m->dir_x * speed_move;
 		if (m->map[(int)m->pos_x][(int)(m->pos_y - m->dir_y * (speed_move * 2))] <= 0 && sprite_pos_b(m) == 1)
 			m->pos_y -= m->dir_y * speed_move;
 	}
-	else if (key == 2)
+	else if (m->e.key.keysym.sym == SDLK_d)
 	{
 		double	old_dir_x = m->dir_x;
 		double	old_plane_x = m->plane_x;
@@ -106,10 +103,10 @@ void	wasd(int key, t_mlx *m)
 		m->plane_x = m->plane_x * cos(-speed) - m->plane_y * sin(-speed);
 		m->plane_y = old_plane_x * sin(-speed) + m->plane_y * cos(-speed);
 		m->sing_tex += 20;
-		if (m->sing_tex >= 700)
+		if (m->sing_tex >= 980)
 			m->sing_tex = 0;
 	}
-	else if (key == 0)
+	else if (m->e.key.keysym.sym == SDLK_a)
 	{
 		double	old_dir_x = m->dir_x;
 		double	old_plane_x = m->plane_x;
@@ -120,47 +117,44 @@ void	wasd(int key, t_mlx *m)
 		m->plane_y = old_plane_x * sin(speed) + m->plane_y * cos(speed);
 		m->sing_tex -= 20;
 		if (m->sing_tex <= 0)
-			m->sing_tex = 700;
+			m->sing_tex = 980;
 	}
 }
 
 
-int		close_win(void *param)
+/*int		close_win(void *param)
 {
 	t_mlx	*m;
 
 	m = (t_mlx*)param;
 	exit(0);
-}
+}*/
 
-void	up_down(int key, t_mlx *m)
+void	up_down(t_mlx *m)
 {
-	if (key == 126)
+	if (m->e.key.keysym.sym == SDLK_UP)
 	{
 		m->up += 5;
 	}
-	else if (key == 125)
+	else if (m->e.key.keysym.sym == SDLK_DOWN)
 	{
 		m->up -= 5;
 	}
 }
 
-int		key_press(int key, void *param)
+int		key_press(t_mlx *m)
 {
-	t_mlx	*m;
-
-	m = (t_mlx*)param;
-	if (key == 53)
-		close_win(param);
-	else if (key == 0 || key == 1 || key == 2 || key == 13)
-		wasd(key, m);
-	else if (key == 126 || key == 125)
-		up_down(key, m);
-	draw(m);
+	if (m->e.key.keysym.sym == SDLK_ESCAPE)
+		m->run = 1;
+	if (m->e.key.keysym.sym == SDLK_w || m->e.key.keysym.sym == SDLK_a || m->e.key.keysym.sym == SDLK_s || m->e.key.keysym.sym == SDLK_d)
+		wasd(m);
+	else if (m->e.key.keysym.sym == SDLK_UP || m->e.key.keysym.sym == SDLK_DOWN)
+		up_down(m);
+	//draw(m);
 	return (0);
 }
 
-void	draw_ver_line(int x, int a, int b, int color, t_img *img)
+/*void	draw_ver_line(int x, int a, int b, int color, t_img *img)
 {
 	int i;
 	i = 0;
@@ -177,20 +171,12 @@ void	draw_ver_line(int x, int a, int b, int color, t_img *img)
 		x += WIN_W;
 		a++;
 	}
-}
+}*/
 
 void	clear_map(t_mlx *m)
 {
-	int color;
-	int	i;
-
-	color = 0x000000;
-	i = 0;
-	while (i <= WIN_H * WIN_W)
-	{
-		*(int *)(m->i->ptr + i * m->i->bpp) = color;
-		i++;
-	}
+	SDL_SetRenderDrawColor(m->ren, 0x00, 0x00, 0x00, 0x00);
+	SDL_RenderClear(m->ren);
 }
 
 void	draw(t_mlx *m)
@@ -273,7 +259,6 @@ void	draw(t_mlx *m)
 		if (side == 0) // если стена x
 		{
 			perp_wall_dist = (map_x - m->pos_x + (1 - step_x) / 2) / ray_dir_x;
-			
 		}
 		else
 		{
@@ -287,39 +272,7 @@ void	draw(t_mlx *m)
 			draw_start = 0;
 		int	draw_end = (wall_height / 2 + h / 2) + m->up;
 		if (draw_end >= h)
-			draw_end = h - 1;
-
-		//if (draw_end_tex >= h)
-		//draw_end_tex = h - 1;
-/*
-		// выбираем цвет стен 
-		int color;
-		if (world_map[map_x][map_y] == 1)
-		{
-			color = 0xf0e68c; // бежевый 
-		}
-		else if (world_map[map_x][map_y] == 2)
-		{
-			color = 0xff00; // green
-		}
-		else if (world_map[map_x][map_y] == 3)
-		{
-			color = 0xffffff; // white
-		}
-		else if (world_map[map_x][map_y] == 4)
-		{
-			color = 0xff00ff; // magenta
-		}
-		else if (world_map[map_x][map_y] == 5)
-		{
-			color = 0xff7f24; // chocolate
-		}
-
-		if (side == 1) // если сторона y то уменьшаем яркость в 2 раза
-		{
-			color = color / 2; 
-		}
-*/
+			draw_end = h;
 
 		double wall_x; //где именно было попадание в стену
 		if (side == 0)
@@ -349,21 +302,45 @@ void	draw(t_mlx *m)
 				tex_x = TEX_W;
 			if (tex_y >= TEX_H)
 				tex_y = TEX_H;
-			
+			SDL_SetRenderDrawColor(m->ren, 0xFF, 0xFF, 0xFF, 0xFF);
 			if (side == 0 && ray_dir_x > 0)
-				color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
+			{
+				m->tex_numb = 0;
+				get_color_tex(tex_x, tex_y, m);
+				SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+				//color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
+			}
 			if (side == 0 && ray_dir_x < 0)
-				color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
+			{
+				m->tex_numb = 1;
+				get_color_tex(tex_x, tex_y, m);
+				SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+				//SDL_SetRenderDrawColor(m->ren, 0xFF, 0xFF, 0xFF, 0xFF);
+				//color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
+			}	
 			if (side == 1 && ray_dir_y > 0)
-				color = get_color_tex(tex_x, tex_y, m->i->addimg[5], m->i->t_s[5]);
+			{
+				m->tex_numb = 2;
+				get_color_tex(tex_x, tex_y, m);
+				SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+				//SDL_SetRenderDrawColor(m->ren, 0xFF, 0xFF, 0xFF, 0xFF);
+				//color = get_color_tex(tex_x, tex_y, m->i->addimg[5], m->i->t_s[5]);
+			}	
 			if (side == 1 && ray_dir_y < 0)
-				color = get_color_tex(tex_x, tex_y, m->i->addimg[6], m->i->t_s[6]);
-			draw_tex(x, y, color, m);
+			{
+				m->tex_numb = 3;
+				get_color_tex(tex_x, tex_y, m);
+				SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+				//SDL_SetRenderDrawColor(m->ren, 0xFF, 0xFF, 0xFF, 0xFF);
+				//color = get_color_tex(tex_x, tex_y, m->i->addimg[6], m->i->t_s[6]);
+			}
+			SDL_RenderDrawPoint(m->ren, x, y);
+			//draw_tex(x, y, color, m);
 			y++;
 		}
 		
 
-
+		
 		
 
 		// skybox
@@ -371,9 +348,10 @@ void	draw(t_mlx *m)
 		y = 0;
 		while (y < draw_start)
 		{
-				
-			color = get_color_tex(c, y + 350 - m->up, m->i->addimg[3], m->i->t_s_w);
-			draw_tex(x, y, color, m);
+			m->tex_numb = 4;
+			get_color_tex(c, y + 350 - m->up, m);
+			SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+			SDL_RenderDrawPoint(m->ren, x, y);
 			y++;
 		}
 
@@ -423,7 +401,6 @@ void	draw(t_mlx *m)
 			double	floor_weight = (current_dis - dist_player) / (perp_wall_dist - dist_player);
 			double	current_floor_x = floor_weight * floor_x_wall + (1 - floor_weight) * m->pos_x; // координата квадрата на карте
 			double	current_floor_y = floor_weight * floor_y_wall + (1 - floor_weight) * m->pos_y; // координата квадрата на карте
-			//printf("y = %f\n", floor_weight);
 			int	floor_x_tex;
 			int	floor_y_tex;
 
@@ -437,15 +414,11 @@ void	draw(t_mlx *m)
 				floor_x_tex = 128;
 			if (floor_y_tex >= 128)
 				floor_y_tex = 128;
-
-			color = get_color_tex(floor_x_tex, floor_y_tex, m->i->addimg[1], m->i->t_s[1]);
-			draw_tex(x, y, color, m);
-
-			/*if (m->map[(int)current_floor_x][(int)current_floor_y] == -1)
-			{
-				color = get_color_tex(floor_x_tex, floor_y_tex, m->i->addimg[0], m->i->t_s[0]);
-				draw_tex(x, h - y, color, m);
-			}*/
+			
+			m->tex_numb = 5;
+			get_color_tex(floor_x_tex, floor_y_tex, m);
+			SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+			SDL_RenderDrawPoint(m->ren, x, y);
 			y++;
 		}
 
@@ -501,13 +474,11 @@ void	draw(t_mlx *m)
 				current_floor_y = 0;
 			if (m->map[(int)current_floor_x][(int)current_floor_y] == -1)
 			{
-				color = get_color_tex(floor_x_tex, floor_y_tex, m->i->addimg[0], m->i->t_s[0]);
-				draw_tex(x, y, color, m);
+				m->tex_numb = 6;
+				get_color_tex(floor_x_tex, floor_y_tex, m);
+				SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+				SDL_RenderDrawPoint(m->ren, x, y);
 			}
-			
-				//color = get_color_tex(floor_x_tex, floor_y_tex, m->i->addimg[0], m->i->t_s[0]);
-				//draw_tex(x, y, color, m);
-			
 			y++;
 		}
 
@@ -515,13 +486,13 @@ void	draw(t_mlx *m)
 		
 
 
-
+		
 		m->wall_dist[x] = perp_wall_dist; // для спрайтов
 		x++;
 	}
 	
-
-
+	/*
+	
 
 	x = 0;
 	while (x < WIN_W)
@@ -697,18 +668,24 @@ void	draw(t_mlx *m)
 			
 						if (side == 0 && ray_dir_x > 0)
 						{
-							color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
-							color = 0xff00ff;
+							m->tex_numb = 0;
+							get_color_tex(tex_x, tex_y, m);
+							SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+							//color = get_color_tex(tex_x, tex_y, m->i->addimg[2], m->i->t_s[2]);
+							//color = 0xff00ff;
 							//draw_tex(x, y, color, m);
 						}
 						if (side == 0 && ray_dir_x < 0)
 						{
-							color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
-							color = 0xffffff;
+							m->tex_numb = 0;
+							get_color_tex(tex_x, tex_y, m);
+							SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xFF);
+							//color = get_color_tex(tex_x, tex_y, m->i->addimg[4], m->i->t_s[4]);
+							//color = 0xffffff;
 							//draw_tex(x, y, color, m);
 						}
-
-						draw_tex(x, y, color, m);
+						SDL_RenderDrawPoint(m->ren, x, y);
+						//draw_tex(x, y, color, m);
 						y++;
 					}
 					m->wall_dist[x] = perp_wall_dist;
@@ -717,7 +694,7 @@ void	draw(t_mlx *m)
 		}
 		x++;
 	}
-
+	/*
 		// sprites
 	int i;
 	int	temp;
@@ -807,14 +784,106 @@ void	draw(t_mlx *m)
 		}
 		i++;
 	}
-
-
-
-
-
-
-	mlx_put_image_to_window(m->mlx, m->window, m->i->img, 0, 0);
+*/
+	SDL_RenderPresent(m->ren);
 }
+
+int		init(t_mlx	*m)
+{
+	int i;
+
+	i = 1;
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	{
+		printf("sdl init error : %s\n", SDL_GetError());
+		i = 0;
+	}
+
+	m->win = SDL_CreateWindow("Wolf3d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIN_W, WIN_H, SDL_WINDOW_SHOWN);
+	if (m->win == NULL)
+	{
+		printf("sdl create win error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->ren = SDL_CreateRenderer(m->win, -1, SDL_RENDERER_SOFTWARE);
+	if (m->ren == NULL)
+	{
+		printf("sdl create ren error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	return (i);
+}
+
+void	quit(t_mlx *m)
+{
+	int i;
+
+	i = 0;
+	while (i < m->tn)
+	{
+		SDL_FreeSurface(m->texture[i]);
+		i++;
+	}
+	SDL_DestroyWindow(m->win);
+	m->win = NULL;
+
+	SDL_DestroyRenderer(m->ren);
+	m->ren = NULL;
+
+	SDL_Quit();
+}
+
+int		load(t_mlx *m)
+{
+	int i;
+
+	i = 1;
+	m->texture[0] = SDL_LoadBMP("./tex/t2.bmp");
+	if (m->texture[0] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[1] = SDL_LoadBMP("./tex/kam128.bmp");
+	if (m->texture[1] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[2] = SDL_LoadBMP("./tex/ser128.bmp");
+	if (m->texture[2] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[3] = SDL_LoadBMP("./tex/trot128.bmp");
+	if (m->texture[3] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[4] = SDL_LoadBMP("./tex/sky.bmp");
+	if (m->texture[4] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[5] = SDL_LoadBMP("./tex/trava.bmp");
+	if (m->texture[5] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->texture[6] = SDL_LoadBMP("./tex/pot.bmp");
+	if (m->texture[6] == NULL)
+	{
+		printf("load error : %s\n", SDL_GetError());
+		i = 0;
+	}
+	m->tn = 7;
+	return (i);
+}
+
 
 int		main(void)
 {
@@ -866,35 +935,7 @@ int		main(void)
 	m.dir_y = dir_y;
 	m.plane_x = plane_x;
 	m.plane_y = plane_y;
-	m.mlx = mlx_init();
-	m.window = mlx_new_window(m.mlx, WIN_W, WIN_H, "Wolf3d");
-	img.img = mlx_new_image(m.mlx, WIN_W, WIN_H);
-	img.ptr = mlx_get_data_addr(img.img, &img.bpp, &img.stride, &img.endian);
-	img.bpp /= 8;
-	m.i = &img;
-	img.t_s[0] = 128;
-	img.image[0] = mlx_xpm_file_to_image(m.mlx, "./pot.xpm", &img.t_s[0], &img.t_s[0]);
-	img.addimg[0] = mlx_get_data_addr(img.image[0], &img.bppimage[0], &img.sl[0], &img.endl[0]);
-	img.t_s[1] = 128;
-	img.image[1] = mlx_xpm_file_to_image(m.mlx, "./trava.xpm", &img.t_s[1], &img.t_s[1]);
-	img.addimg[1] = mlx_get_data_addr(img.image[1], &img.bppimage[1], &img.sl[1], &img.endl[1]);
-	img.t_s[2] = 128;
-	img.image[2] = mlx_xpm_file_to_image(m.mlx, "./t2.xpm", &img.t_s[2], &img.t_s[2]);
-	img.addimg[2] = mlx_get_data_addr(img.image[2], &img.bppimage[2], &img.sl[2], &img.endl[2]);
-	img.t_s_w = 700;
-	img.t_s_h = 700;
-	img.image[3] = mlx_xpm_file_to_image(m.mlx, "./sky3.xpm", &img.t_s_w, &img.t_s_h);
-	img.addimg[3] = mlx_get_data_addr(img.image[3], &img.bppimage[3], &img.sl[3], &img.endl[3]);
-	img.t_s[4] = 128;
-	img.image[4] = mlx_xpm_file_to_image(m.mlx, "./trot128.xpm", &img.t_s[4], &img.t_s[4]);
-	img.addimg[4] = mlx_get_data_addr(img.image[4], &img.bppimage[4], &img.sl[4], &img.endl[4]);
-	img.t_s[5] = 128;
-	img.image[5] = mlx_xpm_file_to_image(m.mlx, "./ser128.xpm", &img.t_s[5], &img.t_s[5]);
-	img.addimg[5] = mlx_get_data_addr(img.image[5], &img.bppimage[5], &img.sl[5], &img.endl[5]);
-	img.t_s[6] = 128;
-	img.image[6] = mlx_xpm_file_to_image(m.mlx, "./kam128.xpm", &img.t_s[6], &img.t_s[6]);
-	img.addimg[6] = mlx_get_data_addr(img.image[6], &img.bppimage[6], &img.sl[6], &img.endl[6]);
-	
+	/*
 
 	sprite.t_s[0] = 128;
 	sprite.image[0] = mlx_xpm_file_to_image(m.mlx, "./sprite.xpm", &sprite.t_s[0], &sprite.t_s[0]);
@@ -949,10 +990,25 @@ int		main(void)
 		}
 		i++;
 	}
-	
+	if (init(&m) == 0)
+	{
+		quit(&m);
+	}
+	if (load(&m) == 0)
+		quit(&m);
+	m.run = 0;
 	draw(&m);
-	mlx_hook(m.window, 2, 0, &key_press, (void*)(&m));
-	mlx_hook(m.window, 17, 0, &close_win, (void*)(&m));
-	mlx_loop(m.mlx);
+	while (m.run == 0)
+	{
+		while (SDL_PollEvent(&m.e) != 0)
+		{
+			if (m.e.type == SDL_QUIT)
+				m.run = 1;
+			if (m.e.type == SDL_KEYDOWN)
+				key_press(&m);
+		}
+		draw(&m);
+	}
+	quit(&m);
 	return (0);
 }
