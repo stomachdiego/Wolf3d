@@ -15,10 +15,9 @@
 
 # include <unistd.h>
 # include <stdlib.h>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
+# include <SDL.h>
 # include <math.h>
+//# include <pthread.h>
 
 # define WIN_W	960
 # define WIN_H	600
@@ -26,7 +25,7 @@
 //# define WIN_W	1920
 //# define WIN_H	1080
 
-# define VIEW_DIST	10
+//# define VIEW_DIST	10
 
 # define MAP_W 24
 # define MAP_H 24
@@ -86,35 +85,36 @@ typedef struct	s_img
 
 }				t_img;
 
-typedef	struct		s_mlx
+typedef	struct	s_mlx
 {
-	SDL_Window		*win;
+	SDL_Window	*win;
+	SDL_Event	e;
+	SDL_Surface *tex[8];
 	SDL_Renderer	*ren;
-	SDL_Event		e;
-	SDL_Surface		*texture[7];
-	void			*mlx;
-	void			*window;
-	t_img			*i;
-	t_sprites		*sprite;
-	void			*img;
-	char			**map;
-	double			pos_x;
-	double			pos_y;
-	double			dir_x;
-	double			dir_y;
-	double			plane_x;
-	double			plane_y;
-	double			wall_dist[WIN_W];
-	int				sing_tex;
-	int				up;
-	int				run;
-	Uint8			r;
-	Uint8			g;
-	Uint8			b;
-	int				tex_numb;
-	int				tn;
-}					t_mlx;
+	void		*mlx;
+	void		*window;
+	t_img		*i;
+	t_sprites	*sprite;
+	void		*img;
+	char		**map;
+	double	pos_x;
+	double	pos_y;
+	double	dir_x;
+	double	dir_y;
+	double	plane_x;
+	double	plane_y;
+	double	wall_dist[WIN_W];
+	int		sing_tex;
+	int		up;
+	int		run;
+	int		tn; //texture number
+	int		th;	// texture helper
+	Uint8	r;
+	Uint8	g;
+	Uint8	b;
+	Uint8	a;
+}				t_mlx;
 
-void			draw(t_mlx *m);
+int			draw(t_mlx *m);
 
 #endif

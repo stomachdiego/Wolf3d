@@ -5,6 +5,5 @@
 		"cmath": "c",
 		"complex": "c",
 		"algorithm": "c"
-	},
-	"C_Cpp.errorSquiggles": "Disabled"
+	}
 }
