@@ -1134,19 +1134,98 @@ int	draw(t_mlx *m)
 		int draw_end_x = sprite_weight / 2 + sprite_screen_x;
 		if (draw_end_x >= WIN_W)
 			draw_end_x = WIN_W - 1;
-			
+		
+		
+		
+		
+		
+		// anim
+		if (sort[i] == 1)
+			m->th = 8;
+		else
+			m->th = 7;
+		// anim
+
+
+
+		
 		int s = draw_start_x;
 		while (s < draw_end_x)
 		{
 			int tex_x_s = (int)(256 * (s - (-sprite_weight / 2 + sprite_screen_x)) * 128 / sprite_weight) / 256;
 			if (transform_y > 0 &&  s > 0 && s < WIN_W && transform_y < m->wall_dist[s])
 			{
+				// anim
+				if (m->th == 8)
+					{
+						if (m->anim >= 10 && m->anim <= 20)
+							tex_x_s += 128;
+						if (m->anim >= 21 && m->anim <= 30)
+							tex_x_s += 256;
+						if (m->anim >= 31 && m->anim <= 40)
+							tex_x_s += 384;
+						
+						if (m->anim >= 51 && m->anim <= 60)
+						{
+							tex_x_s += 128;
+						}
+						if (m->anim >= 61 && m->anim <= 70)
+						{
+							tex_x_s += 256;
+						}
+						if (m->anim >= 71 && m->anim <= 80)
+						{
+							tex_x_s += 384;
+						}
+					}
+				// anim
+
+
+
 				int y = draw_start_y;
 				while (y < draw_end_y)
 				{
 					int d = (y - y_move_screen) * 256 - h * 128 + sprite_height * 128;
 					int tex_y = ((d * 128) / sprite_height) / 256;
-					m->th = 7;
+					
+					
+					
+					
+					
+					// anim
+					
+					if (m->th == 8)
+					{
+						
+						if (m->anim >= 41 && m->anim <= 50)
+							tex_y += 128;
+						if (m->anim >= 51 && m->anim <= 60)
+						{
+							
+							tex_y += 128;
+						}
+						if (m->anim >= 61 && m->anim <= 70)
+						{
+							tex_y += 128;
+							
+						}
+						if (m->anim >= 71 && m->anim <= 80)
+						{
+							tex_y += 128;
+							
+						}
+					}
+
+					// anim
+
+
+
+
+
+
+
+
+
 					get_color_tex(tex_x_s, tex_y, m);
 					if (SDL_SetRenderDrawColor(m->ren, m->r, m->g, m->b, 0xff) == -1)
 					{
@@ -1259,7 +1338,13 @@ int		load(t_mlx *m)
 		printf("%s\n", SDL_GetError());
 		i = 1;
 	}
-	m->tn = 8;
+	m->tex[8] = SDL_LoadBMP("./tex/animPJ.bmp");
+	if (m->tex[8] == NULL)
+	{
+		printf("%s\n", SDL_GetError());
+		i = 1;
+	}
+	m->tn = 9;
 	return(i);
 }
 
@@ -1326,12 +1411,12 @@ int		main(void)
 	sprite.y[0] = 10;
 
 	
-	sprite.x[1] = 12.5;
-	sprite.y[1] = 8;
+	sprite.x[1] = 10;
+	sprite.y[1] = 11;
 
 	
-	sprite.x[2] = 12.0;
-	sprite.y[2] = 7;
+	sprite.x[2] = 10;
+	sprite.y[2] = 12;
 
 	
 	sprite.x[3] = 12.0;
@@ -1370,6 +1455,7 @@ int		main(void)
 
 	SDL_ShowCursor(SDL_DISABLE);
 	
+	m.anim = 0;
 	m.run = 0;
 	while (m.run == 0)
 	{
@@ -1383,6 +1469,9 @@ int		main(void)
 				mouse_move(&m);
 		}
 		draw(&m);
+		m.anim += 5;
+		if (m.anim > 80)
+			m.anim = 0;
 	}
 
 	quit(&m);

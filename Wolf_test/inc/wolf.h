@@ -89,7 +89,7 @@ typedef	struct	s_mlx
 {
 	SDL_Window	*win;
 	SDL_Event	e;
-	SDL_Surface *tex[8];
+	SDL_Surface *tex[9];
 	SDL_Renderer	*ren;
 	void		*mlx;
 	void		*window;
@@ -113,6 +113,7 @@ typedef	struct	s_mlx
 	Uint8	g;
 	Uint8	b;
 	Uint8	a;
+	int		anim;
 }				t_mlx;
 
 int			draw(t_mlx *m);
