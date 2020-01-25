@@ -17,7 +17,7 @@
 # include <stdlib.h>
 # include <SDL.h>
 # include <math.h>
-//# include <pthread.h>
+
 
 # define WIN_W	960
 # define WIN_H	600
