@@ -16,6 +16,7 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <SDL.h>
+# include <SDL_ttf.h>
 # include <math.h>
 
 
@@ -33,11 +34,22 @@
 # define TEX_W 128
 # define TEX_H 128
 
-typedef struct		s_cast
+
+
+
+typedef struct		s_wall
 {
-	int		mx;
+	int		side;
+	int		draw_start;
+	int		draw_end;
+	double wall_x;
+	double perp_wall_dist;
+	double ray_dir_y;
+	double ray_dir_x;
+	int		map_x;
+	int		map_y;
 	
-}					t_cast;
+}					t_wall;
 
 typedef struct	s_vec
 {
@@ -114,8 +126,20 @@ typedef	struct	s_mlx
 	Uint8	b;
 	Uint8	a;
 	int		anim;
+	t_wall		*wall;
+	int		check_anim;
 }				t_mlx;
 
 int			draw(t_mlx *m);
+int			walls(int x, t_mlx *m, t_wall *wall);
+void		get_color_tex(int x, int y, t_mlx *m);
+int			skybox(int x, t_mlx *m);
+int			floor_w(int x, t_mlx *m);
+int			thinwall_x(t_mlx *m);
+int			thinwall_y(t_mlx *m);
+int			sprite(t_mlx *m);
+int			sprite_move(int i, t_mlx *m, double sprite_dist);
+int			check_sprite_p(t_mlx *m, int i);
+int			check_sprite_n(t_mlx *m, int i);
 
 #endif

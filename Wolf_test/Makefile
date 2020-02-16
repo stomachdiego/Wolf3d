@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-SRC = ./src/main.c
+SRC = ./src/main.c ./src/wall.c ./src/sky.c ./src/floor.c ./src/thinwall_x.c ./src/thinwall_y.c ./src/sprite.c 
 
 OBJ = $(SRC:.c=.o)
 
